@@ -1,0 +1,58 @@
+{
+    "name": "jenky/larabbit",
+    "description": "This is my package larabbit",
+    "keywords": [
+        "jenky",
+        "larabbit",
+        "laravel"
+    ],
+    "homepage": "https://github.com/jenky/larabbit",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Lynh",
+            "email": "jenky.w0w@gmail.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^7.2|^8.0",
+        "illuminate/queue": "^7.0|^8.0|^9.0",
+        "illuminate/support": "^7.0|^8.0|^9.0",
+        "php-amqplib/php-amqplib": "^3.2"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.3",
+        "nunomaduro/larastan": "^1.0|^2.1",
+        "orchestra/testbench": "^5.0|^6.0|^7.0",
+        "phpunit/phpunit": "^8.0|^9.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Jenky\\Larabbit\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Jenky\\Larabbit\\Tests\\": "tests"
+        }
+    },
+    "scripts": {
+        "analyse": "vendor/bin/phpstan analyse",
+        "cs": "vendor/bin/php-cs-fixer fix",
+        "test": "vendor/bin/phpunit",
+        "coverage": "vendor/bin/phpunit --coverage"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Jenky\\Larabbit\\LarabbitServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
