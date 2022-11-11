@@ -4,7 +4,10 @@
     "keywords": [
         "jenky",
         "larabbit",
-        "laravel"
+        "amqp",
+        "laravel",
+        "rabbitmq",
+        "queue"
     ],
     "homepage": "https://github.com/jenky/larabbit",
     "license": "MIT",
@@ -16,15 +19,17 @@
         }
     ],
     "require": {
-        "php": "^7.2|^8.0",
-        "illuminate/queue": "^7.0|^8.0|^9.0",
-        "illuminate/support": "^7.0|^8.0|^9.0",
-        "php-amqplib/php-amqplib": "^3.2"
+        "php": "^7.3|^8.0",
+        "illuminate/queue": "^8.0|^9.0",
+        "illuminate/support": "^8.0|^9.0",
+        "queue-interop/amqp-interop": "^0.8.2"
     },
     "require-dev": {
+        "enqueue/amqp-bunny": "^0.10.9",
+        "enqueue/amqp-lib": "^0.10.9",
         "friendsofphp/php-cs-fixer": "^3.3",
         "nunomaduro/larastan": "^1.0|^2.1",
-        "orchestra/testbench": "^5.0|^6.0|^7.0",
+        "orchestra/testbench": "^6.0|^7.0",
         "phpunit/phpunit": "^8.0|^9.0"
     },
     "autoload": {
@@ -49,6 +54,12 @@
                 "Jenky\\Larabbit\\LarabbitServiceProvider"
             ]
         }
+    },
+    "suggest": {
+        "ext-pcntl": "Required to use all features of the queue consumer.",
+        "enqueue/amqp-bunny": "Required to use amqp-bunny AMQP driver",
+        "enqueue/amqp-ext": "Required to use amqp-ext AMQP driver",
+        "enqueue/amqp-lib": "Required to use amqp-lib AMQP driver"
     },
     "config": {
         "sort-packages": true

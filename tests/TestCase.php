@@ -2,6 +2,7 @@
 
 namespace Jenky\Larabbit\Tests;
 
+use Jenky\Larabbit\LarabbitServiceProvider;
 use Orchestra\Testbench\TestCase as BaseTestCase;
 
 class TestCase extends BaseTestCase
@@ -16,7 +17,7 @@ class TestCase extends BaseTestCase
     protected function getPackageProviders($app)
     {
         return [
-            //
+            LarabbitServiceProvider::class,
         ];
     }
 
@@ -40,5 +41,21 @@ class TestCase extends BaseTestCase
         ]);
 
         $config->set('app.debug', true);
+
+        $connection = [
+            'host' => env('RABBITMQ_HOST', '127.0.0.1'),
+            'port' => env('RABBITMQ_PORT', 5672),
+            'user' => env('RABBITMQ_USER', 'guest'),
+            'password' => env('RABBITMQ_PASSWORD', 'guest'),
+            'vhost' => env('RABBITMQ_VHOST', '/'),
+        ];
+
+        $config->set('amqp.connections.amqp_bunny', array_merge([
+            'driver' => 'amqp-bunny',
+        ], $connection));
+
+        $config->set('amqp.connections.amqp_lib', array_merge([
+            'driver' => 'amqp-lib',
+        ], $connection));
     }
 }

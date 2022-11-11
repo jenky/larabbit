@@ -1,11 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Jenky\Larabbit;
 
-use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Contracts\Debug\ExceptionHandler;
+use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\ServiceProvider;
-use InvalidArgumentException;
-use Jenky\Larabbit\Connectors\RabbitMQConnector;
+use Jenky\Larabbit\Connectors\AmqpConnector;
+use Jenky\Larabbit\Contracts\ConnectionFactory;
 
 class LarabbitServiceProvider extends ServiceProvider
 {
@@ -16,9 +19,19 @@ class LarabbitServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->mergeConfigFrom(__DIR__.'/../config/rabbitmq.php', 'queue.connections.rabbitmq');
+        $this->mergeConfigFrom(__DIR__.'/../config/queue.php', 'queue.connections.rabbitmq');
+        $this->mergeConfigFrom(__DIR__.'/../config/amqp.php', 'amqp');
 
         $this->registerConnection();
+        // $this->registerWorker();
+
+        /* if ($this->app->runningInConsole()) {
+            $this->app->singleton(Console\ConsumeCommand::class, function ($app) {
+                return new Console\ConsumeCommand(
+                    $app['amqp.worker'], $app['cache.store']
+                );
+            });
+        } */
     }
 
     /**
@@ -28,47 +41,89 @@ class LarabbitServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        $this->app['queue']->addConnector('rabbitmq', function () {
-            return new RabbitMQConnector(
-                $this->app->make(Dispatcher::class),
-                $this->app->make('rabbitmq.resolver')
-            );
-        });
+        $this->registerPublishing();
+
+        $this->registerQueueConnector();
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                Console\BindCommand::class,
+                Console\ConsumeCommand::class,
+                Console\ExchangeDeclareCommand::class,
+                Console\ExchangeDeleteCommand::class,
+                Console\QueueDeclareCommand::class,
+                Console\QueueDeleteCommand::class,
+            ]);
+        }
+    }
+
+    /**
+     * Register the package's publishable resources.
+     *
+     * @return void
+     */
+    protected function registerPublishing(): void
+    {
+        if ($this->app->runningInConsole()) {
+            $this->publishes([
+                __DIR__.'/../config/amqp.php' => config_path('amqp.php'),
+            ], 'amqp-config');
+        }
     }
 
     protected function registerConnection(): void
     {
-        $config = $this->app->make('config')->get('queue.connections.rabbitmq', []);
+        $this->app->singleton(ConnectionFactory::class, function ($app) {
+            return new Manager($app);
+        });
 
-        $this->app->singleton(
-            'rabbitmq.resolver', $resolver = $this->connectionResolver($config['connection_resolver'] ?? null)
-        );
+        $this->app->alias(ConnectionFactory::class, 'amqp');
 
-        $this->app->bind('rabbitmq.connection', function () use ($config, $resolver) {
-            return $resolver($config['connection'] ?? []);
+        $this->app->singleton('amqp.connection', function ($app) {
+            return $app['amqp']->connection();
         });
     }
 
-    /**
-     * Get the connection resolver.
-     *
-     * @param  \Closure|string|null  $resolver
-     * @return mixed
-     *
-     * @throws \InvalidArgumentException
-     */
-    protected function connectionResolver($resolver = null)
+    protected function registerWorker(): void
     {
-        $resolver = $resolver ?: ConnectionResolver::class;
+        $this->app->singleton('amqp.worker', function ($app) {
+            $isDownForMaintenance = function () {
+                return $this->app->isDownForMaintenance();
+            };
 
-        if (is_callable($resolver)) {
-            return $resolver;
-        }
+            $resetScope = function () use ($app) {
+                if (method_exists($app['log']->driver(), 'withoutContext')) {
+                    $app['log']->withoutContext();
+                }
 
-        if (! class_exists($resolver)) {
-            throw new InvalidArgumentException('Invalid connection resolver.');
-        }
+                if (method_exists($app['db'], 'getConnections')) {
+                    foreach ($app['db']->getConnections() as $connection) {
+                        $connection->resetTotalQueryDuration();
+                        $connection->allowQueryDurationHandlersToRunAgain();
+                    }
+                }
 
-        return $this->app->make($resolver);
+                $app->forgetScopedInstances();
+
+                return Facade::clearResolvedInstances();
+            };
+
+            return new Worker(
+                $app['queue'],
+                $app['events'],
+                $app[ExceptionHandler::class],
+                $isDownForMaintenance,
+                $resetScope
+            );
+        });
+    }
+
+    protected function registerQueueConnector(): void
+    {
+        $this->app['queue']->addConnector('amqp', function () {
+            return new AmqpConnector(
+                $this->app->make(ConnectionFactory::class)
+            );
+        });
     }
 }
