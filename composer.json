@@ -1,6 +1,6 @@
 {
     "name": "jenky/larabbit",
-    "description": "This is my package larabbit",
+    "description": "AMQP connection and RabbitMQ queue driver for Laravel app",
     "keywords": [
         "jenky",
         "larabbit",
@@ -49,6 +49,9 @@
         "coverage": "vendor/bin/phpunit --coverage"
     },
     "extra": {
+        "branch-alias": {
+            "dev-master": "1.x-dev"
+        },
         "laravel": {
             "providers": [
                 "Jenky\\Larabbit\\LarabbitServiceProvider"
@@ -56,7 +59,6 @@
         }
     },
     "suggest": {
-        "ext-pcntl": "Required to use all features of the queue consumer.",
         "enqueue/amqp-bunny": "Required to use amqp-bunny AMQP driver",
         "enqueue/amqp-ext": "Required to use amqp-ext AMQP driver",
         "enqueue/amqp-lib": "Required to use amqp-lib AMQP driver"
