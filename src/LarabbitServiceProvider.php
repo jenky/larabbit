@@ -45,16 +45,7 @@ class LarabbitServiceProvider extends ServiceProvider
 
         $this->registerQueueConnector();
 
-        if ($this->app->runningInConsole()) {
-            $this->commands([
-                Console\BindCommand::class,
-                Console\ConsumeCommand::class,
-                Console\ExchangeDeclareCommand::class,
-                Console\ExchangeDeleteCommand::class,
-                Console\QueueDeclareCommand::class,
-                Console\QueueDeleteCommand::class,
-            ]);
-        }
+        $this->registerCommands();
     }
 
     /**
@@ -71,6 +62,33 @@ class LarabbitServiceProvider extends ServiceProvider
         }
     }
 
+    /**
+     * Register the package's commands.
+     *
+     * @return void
+     */
+    protected function registerCommands(): void
+    {
+        if (! $this->app->runningInConsole()) {
+            return;
+        }
+
+        $this->commands([
+            Console\BindCommand::class,
+            Console\UnbindCommand::class,
+            Console\ConsumeCommand::class,
+            Console\ExchangeDeclareCommand::class,
+            Console\ExchangeDeleteCommand::class,
+            Console\QueueDeclareCommand::class,
+            Console\QueueDeleteCommand::class,
+        ]);
+    }
+
+    /**
+     * Register the package connection factory.
+     *
+     * @return void
+     */
     protected function registerConnection(): void
     {
         $this->app->singleton(ConnectionFactory::class, function ($app) {
@@ -118,6 +136,11 @@ class LarabbitServiceProvider extends ServiceProvider
         });
     }
 
+    /**
+     * Register package queue connector to queue manager.
+     *
+     * @return void
+     */
     protected function registerQueueConnector(): void
     {
         $this->app['queue']->addConnector('amqp', function () {
