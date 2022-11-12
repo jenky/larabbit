@@ -44,7 +44,12 @@ class Manager implements ConnectionFactory
         $this->app = $app;
     }
 
-    public function getDefaultDriver()
+    /**
+     * Get the default driver.
+     *
+     * @return string
+     */
+    public function getDefaultDriver(): string
     {
         return $this->app['config']['amqp.default'] ?? '';
     }
@@ -74,7 +79,7 @@ class Manager implements ConnectionFactory
     }
 
     /**
-     * Resolve the given log instance by name.
+     * Resolve the given connection factory instance by name.
      *
      * @param  string  $name
      * @param  array|null  $config
