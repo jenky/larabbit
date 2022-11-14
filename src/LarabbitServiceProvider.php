@@ -76,7 +76,7 @@ class LarabbitServiceProvider extends ServiceProvider
         $this->commands([
             Console\BindCommand::class,
             Console\UnbindCommand::class,
-            Console\ConsumeCommand::class,
+            // Console\ConsumeCommand::class,
             Console\ExchangeDeclareCommand::class,
             Console\ExchangeDeleteCommand::class,
             Console\QueueDeclareCommand::class,
